@@ -9,6 +9,7 @@
         public string Token { get; set; } = string.Empty;
         public DateTime Expiration { get; set; } = DateTime.UtcNow.AddHours(1);
 
+        public EmailConfirmToken() { }
         public EmailConfirmToken(User user, string token)
         {
             UserId = user.Id;
