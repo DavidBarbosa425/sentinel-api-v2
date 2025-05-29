@@ -7,6 +7,10 @@ using sentinel_api.Core.Interfaces;
 using sentinel_api.Infrastructure.Data;
 using sentinel_api.Application.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 
 
@@ -17,14 +21,17 @@ namespace sentinel_api.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
         public AuthService(
-            UserManager<User> userManager, 
+            UserManager<User> userManager,
             AppDbContext context,
-            IEmailService emailService)
+            IEmailService emailService,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _context = context;
             _emailService = emailService;
+            _configuration = configuration;
         }
         public async Task<Result> RegisterAsync(RegisterDto dto)
         {
@@ -77,7 +84,7 @@ namespace sentinel_api.Application.Services
             var result = await _userManager.ConfirmEmailAsync(user, tokenEntry.Token);
 
             if (!result.Succeeded) return Result.Failure("Erro ao confirmar o e-mail do usuário.");
-            
+
             _context.EmailConfirmTokens.Remove(tokenEntry);
             await _context.SaveChangesAsync();
 
@@ -85,5 +92,41 @@ namespace sentinel_api.Application.Services
 
         }
 
+        public async Task<Result> LoginAsync(LoginDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password)) 
+                return Result.Failure("Usuário não encontrado ou senha inválida");
+
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+                return Result.Failure("Confirme seu e-mail antes de fazer login.");
+
+            var token = GenerateJwtToken(user);
+
+            return Result<string>.Success(token, "pega o token ai");
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JwtSettings:Issuer"],
+                audience: _configuration["JwtSettings:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
     }
 }
