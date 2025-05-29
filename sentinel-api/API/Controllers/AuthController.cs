@@ -23,5 +23,13 @@ namespace sentinel_api.WebAPI.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("confirmUserEmail")]
+        public async Task<IActionResult> ConfirmUserEmail(Guid id)
+        {
+            var result = await _authService.ConfirmUserEmailAsync(id);
+
+            return Ok(result);
+        }
     }
 }

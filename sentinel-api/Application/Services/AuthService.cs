@@ -6,6 +6,7 @@ using sentinel_api.Core.Entities;
 using sentinel_api.Core.Interfaces;
 using sentinel_api.Infrastructure.Data;
 using sentinel_api.Application.Common;
+using Microsoft.EntityFrameworkCore;
 
 
 
@@ -16,8 +17,6 @@ namespace sentinel_api.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
-
-
         public AuthService(
             UserManager<User> userManager, 
             AppDbContext context,
@@ -35,20 +34,22 @@ namespace sentinel_api.Application.Services
             if (!creationResult.Succeeded)
                 return Result.Failure("Erro ao criar usuario");
 
-            await SendEmailConfirmationAsync(user);
-
-            return Result.Success("Usuário Registrado com Sucesso!");
+            return await SendEmailConfirmationAsync(user);
         }
-
-        public async Task SendEmailConfirmationAsync(User user)
+        public async Task<Result> SendEmailConfirmationAsync(User user)
         {
             var token = await GenerateEmailTokenAsync(user);
+
+            if (string.IsNullOrEmpty(token))
+                return Result.Failure("Erro ao gerar token de confirmação de e-mail.");
 
             var emailToken = new EmailConfirmToken(user, token);
 
             await SaveEmailTokenAsync(emailToken);
 
             await _emailService.SendEmailAsync(emailToken);
+
+            return Result.Success("E-mail de confirmação enviado com sucesso! Confira sua caixa de entrada.");
         }
 
         private async Task<string> GenerateEmailTokenAsync(User user)
@@ -60,6 +61,28 @@ namespace sentinel_api.Application.Services
         {
             _context.EmailConfirmTokens.Add(emailToken);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Result> ConfirmUserEmailAsync(Guid id)
+        {
+            var tokenEntry = await _context.EmailConfirmTokens
+                .FirstOrDefaultAsync(t => t.Id == id && t.Expiration > DateTime.UtcNow);
+
+            if (tokenEntry == null) return Result.Failure("Token de confirmação inválido ou expirado.");
+
+            var user = await _userManager.FindByIdAsync(tokenEntry.UserId);
+
+            if (user == null) return Result.Failure("Usuário não encontrado.");
+
+            var result = await _userManager.ConfirmEmailAsync(user, tokenEntry.Token);
+
+            if (!result.Succeeded) return Result.Failure("Erro ao confirmar o e-mail do usuário.");
+            
+            _context.EmailConfirmTokens.Remove(tokenEntry);
+            await _context.SaveChangesAsync();
+
+            return Result.Success("E-mail confirmado com sucesso!");
+
         }
 
     }

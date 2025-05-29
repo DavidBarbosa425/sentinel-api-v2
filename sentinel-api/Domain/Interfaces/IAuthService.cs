@@ -7,7 +7,8 @@ namespace sentinel_api.Core.Interfaces
     public interface IAuthService
     {
         Task<Result> RegisterAsync(RegisterDto dto);
-        Task SendEmailConfirmationAsync(User user);
+        Task<Result> SendEmailConfirmationAsync(User user);
+        Task<Result> ConfirmUserEmailAsync(Guid id);
 
     }
 }

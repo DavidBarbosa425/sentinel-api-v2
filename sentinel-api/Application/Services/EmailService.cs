@@ -48,7 +48,7 @@ namespace sentinel_api.Application.Services
             var scheme = request?.Scheme ?? "https";
             var host = request?.Host.ToString() ?? "localhost";
 
-            var confirmationLink = $"{scheme}://{host}/api/auth/confirm-email?id={emailConfirmToken.Id}";
+            var confirmationLink = $"{scheme}://{host}/api/auth/confirmUserEmail?id={emailConfirmToken.Id}";
 
             var htmlMessage = $@"
             <p>Olá {emailConfirmToken.Name},</p>
