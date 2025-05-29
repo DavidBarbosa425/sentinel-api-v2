@@ -5,6 +5,6 @@ namespace sentinel_api.Core.Interfaces
     public interface IEmailService
     {
         Task SendEmailAsync(EmailConfirmToken emailConfirmToken);
-        string GerarLinkConfirmacao(EmailConfirmToken emailConfirmToken);
+        string GenerateConfirmationLink(EmailConfirmToken emailConfirmToken);
     }
 }

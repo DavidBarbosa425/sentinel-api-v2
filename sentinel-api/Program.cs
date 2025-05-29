@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using sentinel_api.API.Middlewares;
 using sentinel_api.Application.Services;
 using sentinel_api.Core.Entities;
 using sentinel_api.Core.Interfaces;
@@ -25,6 +26,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

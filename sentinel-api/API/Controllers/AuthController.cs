@@ -19,12 +19,9 @@ namespace sentinel_api.WebAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var (succeeded, errors) = await _authService.RegisterAsync(dto);
+            var result = await _authService.RegisterAsync(dto);
 
-            if (!succeeded)
-                return BadRequest(errors);
-
-            return Ok("Usuário registrado com sucesso");
+            return Ok(result);
         }
     }
 }

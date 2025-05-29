@@ -5,6 +5,7 @@ using sentinel_api.Application.DTOs;
 using sentinel_api.Core.Entities;
 using sentinel_api.Core.Interfaces;
 using sentinel_api.Infrastructure.Data;
+using sentinel_api.Application.Common;
 
 
 
@@ -26,31 +27,39 @@ namespace sentinel_api.Application.Services
             _context = context;
             _emailService = emailService;
         }
-        public async Task<(bool Succeeded, IEnumerable<string> Errors)> RegisterAsync(RegisterDto dto)
+        public async Task<Result> RegisterAsync(RegisterDto dto)
         {
             var user = new User(dto);
+            var creationResult = await _userManager.CreateAsync(user, dto.Senha);
 
-            var result = await _userManager.CreateAsync(user, dto.Senha);
+            if (!creationResult.Succeeded)
+                return Result.Failure("Erro ao criar usuario");
 
-            if (!result.Succeeded)
-                return (false, result.Errors.Select(e => e.Description));
+            await SendEmailConfirmationAsync(user);
 
-            await GenerateEmailConfirmationTokenAsync(user);
-
-            return (true, null);
+            return Result.Success("Usuário Registrado com Sucesso!");
         }
 
-        public async Task GenerateEmailConfirmationTokenAsync(User user)
+        public async Task SendEmailConfirmationAsync(User user)
         {
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var token = await GenerateEmailTokenAsync(user);
 
-            var tokenEmailConfirmation = new EmailConfirmToken(user, token);
+            var emailToken = new EmailConfirmToken(user, token);
 
-            _context.EmailConfirmTokens.Add(tokenEmailConfirmation);
+            await SaveEmailTokenAsync(emailToken);
 
+            await _emailService.SendEmailAsync(emailToken);
+        }
+
+        private async Task<string> GenerateEmailTokenAsync(User user)
+        {
+            return await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        }
+
+        private async Task SaveEmailTokenAsync(EmailConfirmToken emailToken)
+        {
+            _context.EmailConfirmTokens.Add(emailToken);
             await _context.SaveChangesAsync();
-
-            await _emailService.SendEmailAsync(tokenEmailConfirmation);
         }
 
     }

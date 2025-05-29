@@ -29,7 +29,7 @@ namespace sentinel_api.Application.Services
             emailMessage.To.Add(new MailboxAddress("", emailConfirmToken.Email));
             emailMessage.Subject = "Confirmação de E-mail";
 
-            var message = GerarLinkConfirmacao(emailConfirmToken);
+            var message = GenerateConfirmationLink(emailConfirmToken);
             emailMessage.Body = new TextPart("html") { Text = message };
 
             using (var client = new SmtpClient())
@@ -41,7 +41,7 @@ namespace sentinel_api.Application.Services
             }
         }
 
-        public string GerarLinkConfirmacao(EmailConfirmToken emailConfirmToken)
+        public string GenerateConfirmationLink(EmailConfirmToken emailConfirmToken)
         {
 
             var request = _httpContextAccessor.HttpContext?.Request;
