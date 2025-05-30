@@ -10,6 +10,7 @@ namespace sentinel_api.Core.Interfaces
         Task<Result> SendEmailConfirmationAsync(User user);
         Task<Result> ConfirmUserEmailAsync(Guid id);
         Task<Result> LoginAsync(LoginDto dto);
+        Task<Result> ForgotPasswordAsync(ForgotPasswordDto dto);
 
     }
 }

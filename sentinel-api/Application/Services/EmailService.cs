@@ -1,4 +1,5 @@
 ﻿using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Identity;
 using MimeKit;
 using sentinel_api.Core.Entities;
 using sentinel_api.Core.Interfaces;
@@ -8,10 +9,13 @@ namespace sentinel_api.Application.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UserManager<User> _userManager;
         public EmailService(
+            UserManager<User> userManager,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor)
         {
+            _userManager = userManager;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -49,6 +53,49 @@ namespace sentinel_api.Application.Services
             var host = request?.Host.ToString() ?? "localhost";
 
             var confirmationLink = $"{scheme}://{host}/api/auth/confirmUserEmail?id={emailConfirmToken.Id}";
+
+            var htmlMessage = $@"
+            <p>Olá {emailConfirmToken.Name},</p>
+            <p>Clique no botão abaixo para confirmar seu e-mail:</p>
+            <p><a style='padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none;' href='{confirmationLink}'>Confirmar E-mail</a></p>
+            <p>Se você não se registrou, ignore este e-mail.</p>
+             ";
+
+            return htmlMessage;
+        }
+        public async Task SendEmailPasswordResetAsync(EmailConfirmToken emailConfirmToken, User user)
+        {
+            var smtpServer = _configuration["Smtp:Server"];
+            var port = int.Parse(_configuration["Smtp:Port"]);
+            var username = _configuration["Smtp:Username"];
+            var password = _configuration["Smtp:Password"];
+            var emailFrom = _configuration["Email:From"];
+            var sender = _configuration["sender"];
+
+            var emailMessage = new MimeMessage();
+            emailMessage.From.Add(new MailboxAddress(sender, emailFrom));
+            emailMessage.To.Add(new MailboxAddress("", emailConfirmToken.Email));
+            emailMessage.Subject = "Reset Password";
+
+            var message = await GeneratePasswordResetLink(emailConfirmToken, user);
+            emailMessage.Body = new TextPart("html") { Text = message };
+
+            using (var client = new SmtpClient())
+            {
+                await client.ConnectAsync(smtpServer, port, false);
+                await client.AuthenticateAsync(username, password);
+                var teste = await client.SendAsync(emailMessage);
+                await client.DisconnectAsync(true);
+            }
+        }
+
+        private async Task<string> GeneratePasswordResetLink(EmailConfirmToken emailConfirmToken, User user)
+        {
+            var request = _httpContextAccessor.HttpContext?.Request;
+            var scheme = request?.Scheme ?? "https";
+            var host = request?.Host.ToString() ?? "localhost";
+
+            var confirmationLink = $"{scheme}://{host}/api/auth/resetPassword?email={user.Email}&token={Uri.EscapeDataString(emailConfirmToken.Token)}";
 
             var htmlMessage = $@"
             <p>Olá {emailConfirmToken.Name},</p>

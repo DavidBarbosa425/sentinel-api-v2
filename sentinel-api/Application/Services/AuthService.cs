@@ -64,6 +64,11 @@ namespace sentinel_api.Application.Services
             return await _userManager.GenerateEmailConfirmationTokenAsync(user);
         }
 
+        private async Task<string> GeneratePasswordResetTokenAsync(User user)
+        {
+            return await _userManager.GeneratePasswordResetTokenAsync(user);
+        }
+
         private async Task SaveEmailTokenAsync(EmailConfirmToken emailToken)
         {
             _context.EmailConfirmTokens.Add(emailToken);
@@ -92,11 +97,33 @@ namespace sentinel_api.Application.Services
 
         }
 
+        public async Task<Result> ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (user == null)
+                return Result.Failure("Se o e-mail estiver cadastrado, enviaremos um link de redefinição.");
+
+            var token = await GeneratePasswordResetTokenAsync(user);
+
+            if (string.IsNullOrEmpty(token))
+                return Result.Failure("Erro ao gerar token de confirmação de e-mail.");
+
+            var emailToken = new EmailConfirmToken(user, token);
+
+            await SaveEmailTokenAsync(emailToken);
+
+            await _emailService.SendEmailPasswordResetAsync(emailToken,user);
+
+            return Result.Success("E-mail de confirmação enviado com sucesso! Confira sua caixa de entrada.");
+
+        }
+
         public async Task<Result> LoginAsync(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
 
-            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password)) 
+            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
                 return Result.Failure("Usuário não encontrado ou senha inválida");
 
             if (!await _userManager.IsEmailConfirmedAsync(user))
@@ -128,5 +155,7 @@ namespace sentinel_api.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
+
 }

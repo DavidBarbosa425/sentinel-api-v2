@@ -39,5 +39,13 @@ namespace sentinel_api.WebAPI.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("forgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            var result = await _authService.ForgotPasswordAsync(dto);
+
+            return Ok(result);
+        }
     }
 }

@@ -6,5 +6,6 @@ namespace sentinel_api.Core.Interfaces
     {
         Task SendEmailAsync(EmailConfirmToken emailConfirmToken);
         string GenerateConfirmationLink(EmailConfirmToken emailConfirmToken);
+        Task SendEmailPasswordResetAsync(EmailConfirmToken emailConfirmToken, User user);
     }
 }
