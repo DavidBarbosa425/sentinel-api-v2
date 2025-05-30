@@ -47,5 +47,16 @@ namespace sentinel_api.WebAPI.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("resetPassword")]
+        public async Task<IActionResult> ResetPassword([FromQuery] string email, [FromQuery] string token)
+        {
+            var dto = new ResetPasswordDto();
+            dto.Email = email;
+            dto.Token = token;
+            var result = await _authService.ResetPasswordAsync(dto);
+
+            return Ok(result);
+        }
     }
 }

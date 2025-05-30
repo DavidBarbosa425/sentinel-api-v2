@@ -119,6 +119,18 @@ namespace sentinel_api.Application.Services
 
         }
 
+        public async Task<Result> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (user == null)
+                return Result.Failure("Usuário não encontrado.");
+
+            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+
+            return Result.Success("Senha redefinida com sucesso! Você pode fazer login agora.");
+        }
+
         public async Task<Result> LoginAsync(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
