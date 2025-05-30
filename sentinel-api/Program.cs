@@ -4,6 +4,7 @@ using sentinel_api.API.Middlewares;
 using sentinel_api.Application.Services;
 using sentinel_api.Core.Entities;
 using sentinel_api.Core.Interfaces;
+using sentinel_api.Domain.Interfaces;
 using sentinel_api.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,7 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
