@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MailKit.Net.Smtp;
-using MimeKit;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using sentinel_api.Application.Common;
 using sentinel_api.Application.DTOs;
 using sentinel_api.Core.Entities;
 using sentinel_api.Core.Interfaces;
 using sentinel_api.Infrastructure.Data;
-using sentinel_api.Application.Common;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -41,38 +39,9 @@ namespace sentinel_api.Application.Services
             if (!creationResult.Succeeded)
                 return Result.Failure("Erro ao criar usuario");
 
-            return await SendEmailConfirmationAsync(user);
-        }
-        public async Task<Result> SendEmailConfirmationAsync(User user)
-        {
-            var token = await GenerateEmailTokenAsync(user);
-
-            if (string.IsNullOrEmpty(token))
-                return Result.Failure("Erro ao gerar token de confirmação de e-mail.");
-
-            var emailToken = new EmailConfirmToken(user, token);
-
-            await SaveEmailTokenAsync(emailToken);
-
-            await _emailService.SendEmailAsync(emailToken);
+            await _emailService.SendEmailConfirmationAsync(user);
 
             return Result.Success("E-mail de confirmação enviado com sucesso! Confira sua caixa de entrada.");
-        }
-
-        private async Task<string> GenerateEmailTokenAsync(User user)
-        {
-            return await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        }
-
-        private async Task<string> GeneratePasswordResetTokenAsync(User user)
-        {
-            return await _userManager.GeneratePasswordResetTokenAsync(user);
-        }
-
-        private async Task SaveEmailTokenAsync(EmailConfirmToken emailToken)
-        {
-            _context.EmailConfirmTokens.Add(emailToken);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<Result> ConfirmUserEmailAsync(Guid id)
@@ -104,18 +73,9 @@ namespace sentinel_api.Application.Services
             if (user == null)
                 return Result.Failure("Se o e-mail estiver cadastrado, enviaremos um link de redefinição.");
 
-            var token = await GeneratePasswordResetTokenAsync(user);
+            await _emailService.SendEmailPasswordResetAsync(user);
 
-            if (string.IsNullOrEmpty(token))
-                return Result.Failure("Erro ao gerar token de confirmação de e-mail.");
-
-            var emailToken = new EmailConfirmToken(user, token);
-
-            await SaveEmailTokenAsync(emailToken);
-
-            await _emailService.SendEmailPasswordResetAsync(emailToken,user);
-
-            return Result.Success("E-mail de confirmação enviado com sucesso! Confira sua caixa de entrada.");
+            return Result.Success("E-mail de recuperar senha enviado com sucesso! Confira sua caixa de entrada.");
 
         }
 
