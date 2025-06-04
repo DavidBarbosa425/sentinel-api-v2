@@ -26,6 +26,7 @@ namespace sentinel_api.Application.Services
             _userManager = userManager;
             _context = context;
             _jwtService = jwtService;
+            _emailService = emailService;
         }
         public async Task<Result> RegisterAsync(RegisterDto dto)
         {

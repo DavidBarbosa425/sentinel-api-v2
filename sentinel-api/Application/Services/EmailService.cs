@@ -1,12 +1,11 @@
 ﻿using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MimeKit;
-using sentinel_api.Application.Common;
 using sentinel_api.Core.Entities;
 using sentinel_api.Core.Interfaces;
+using sentinel_api.Infrastructure.Configurations;
 using sentinel_api.Infrastructure.Data;
-using System.Threading.Tasks;
 namespace sentinel_api.Application.Services
 {
     public class EmailService : IEmailService
@@ -15,29 +14,28 @@ namespace sentinel_api.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<User> _userManager;
         private readonly AppDbContext _context;
+        private readonly SmtpSettings _smtpSettings;
+        private readonly EmailSettings _emailSettings;
 
-        public EmailService(
+        public EmailService(    
             UserManager<User> userManager,
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
-            AppDbContext context)
+            AppDbContext context,
+            IOptions<SmtpSettings> smtpOptions,
+            IOptions<EmailSettings> emailOptions)
         {
             _userManager = userManager;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
             _context = context;
+            _smtpSettings = smtpOptions.Value;
+            _emailSettings = emailOptions.Value;
         }
         public async Task SendEmailConfirmationAsync(User user)
         {
-            var smtpServer = _configuration["Smtp:Server"];
-            var port = int.Parse(_configuration["Smtp:Port"]);
-            var username = _configuration["Smtp:Username"];
-            var password = _configuration["Smtp:Password"];
-            var emailFrom = _configuration["Email:From"];
-            var sender = _configuration["sender"];
-
             var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress(sender, emailFrom));
+            emailMessage.From.Add(new MailboxAddress(_emailSettings.Sender, _emailSettings.From));
             emailMessage.To.Add(new MailboxAddress("", user.Email));
             emailMessage.Subject = "Confirmação de E-mail";
 
@@ -47,8 +45,8 @@ namespace sentinel_api.Application.Services
 
             using (var client = new SmtpClient())
             {
-                await client.ConnectAsync(smtpServer, port, false);
-                await client.AuthenticateAsync(username, password);
+                await client.ConnectAsync(_smtpSettings.Server, _smtpSettings.Port, false);
+                await client.AuthenticateAsync(_smtpSettings.Username, _smtpSettings.Password);
                 var teste = await client.SendAsync(emailMessage);
                 await client.DisconnectAsync(true);
             }
@@ -84,15 +82,8 @@ namespace sentinel_api.Application.Services
         }
         public async Task SendEmailPasswordResetAsync(User user)
         {
-            var smtpServer = _configuration["Smtp:Server"];
-            var port = int.Parse(_configuration["Smtp:Port"]);
-            var username = _configuration["Smtp:Username"];
-            var password = _configuration["Smtp:Password"];
-            var emailFrom = _configuration["Email:From"];
-            var sender = _configuration["sender"];
-
             var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress(sender, emailFrom));
+            emailMessage.From.Add(new MailboxAddress(_emailSettings.Sender, _emailSettings.From));
             emailMessage.To.Add(new MailboxAddress("", user.Email));
             emailMessage.Subject = "Reset Password";
 
@@ -101,8 +92,8 @@ namespace sentinel_api.Application.Services
 
             using (var client = new SmtpClient())
             {
-                await client.ConnectAsync(smtpServer, port, false);
-                await client.AuthenticateAsync(username, password);
+                await client.ConnectAsync(_smtpSettings.Server, _smtpSettings.Port, false);
+                await client.AuthenticateAsync(_smtpSettings.Username, _smtpSettings.Password);
                 var teste = await client.SendAsync(emailMessage);
                 await client.DisconnectAsync(true);
             }
