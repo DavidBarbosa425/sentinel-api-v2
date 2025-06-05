@@ -36,7 +36,7 @@ namespace sentinel_api.Application.Services
             if (!creationResult.Succeeded)
                 return Result.Failure("Erro ao criar usuario");
 
-            await _emailService.SendEmailConfirmationAsync(user);
+            await _emailService.EmailConfirmationAsync(user);
 
             return Result.Success("E-mail de confirmação enviado com sucesso! Confira sua caixa de entrada.");
         }
@@ -70,7 +70,7 @@ namespace sentinel_api.Application.Services
             if (user == null)
                 return Result.Failure("Se o e-mail estiver cadastrado, enviaremos um link de redefinição.");
 
-            await _emailService.SendEmailPasswordResetAsync(user);
+            await _emailService.EmailPasswordResetAsync(user);
 
             return Result.Success("E-mail de recuperar senha enviado com sucesso! Confira sua caixa de entrada.");
 
