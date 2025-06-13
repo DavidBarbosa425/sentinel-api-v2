@@ -8,6 +8,7 @@
     <UserSecretsId>f65b383a-4590-48b4-b090-b44e62b0cdc5</UserSecretsId>
   </PropertyGroup>
 
+
   <ItemGroup>
     <PackageReference Include="MailKit" Version="4.12.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.5" />

@@ -1,0 +1,10 @@
+Dockerfile
+.dockerignore
+*.md
+*.log
+*.user
+*.http
+bin/
+obj/
+.git/
+.vscode/

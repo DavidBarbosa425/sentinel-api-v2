@@ -43,7 +43,7 @@ namespace sentinel_api.Application.Services
             }
         }
 
-        private async Task<MimeMessage> CreateEmailAsync(User user, string subject, string message)
+        private MimeMessage CreateEmail(User user, string subject, string message)
         {
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(new MailboxAddress(_emailSettings.Sender, _emailSettings.From));
@@ -56,13 +56,13 @@ namespace sentinel_api.Application.Services
 
         public async Task EmailConfirmationAsync(User user)
         {
-            var emailMessage = await CreateEmailAsync(user, EmailSubjects.Confirmation, await GenerateMessage(user, EmailSubjects.Confirmation));
+            var emailMessage = CreateEmail(user, EmailSubjects.Confirmation, await GenerateMessage(user, EmailSubjects.Confirmation));
             await SendEmailAsync(emailMessage);
         }
 
         public async Task EmailPasswordResetAsync(User user)
         {
-            var emailMessage = await CreateEmailAsync(user, EmailSubjects.PasswordReset, await GenerateMessage(user, EmailSubjects.PasswordReset));
+            var emailMessage = CreateEmail(user, EmailSubjects.PasswordReset, await GenerateMessage(user, EmailSubjects.PasswordReset));
             await SendEmailAsync(emailMessage);
         }
 
