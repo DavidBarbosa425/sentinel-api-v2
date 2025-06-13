@@ -38,7 +38,7 @@ namespace sentinel_api.Application.Services
 
             await _emailService.EmailConfirmationAsync(user);
 
-            return Result.Success("E-mail de confirmação enviado com sucesso! Confira sua caixa de entrada.");
+            return Result.Ok("E-mail de confirmação enviado com sucesso! Confira sua caixa de entrada.");
         }
 
         public async Task<Result> ConfirmUserEmailAsync(Guid id)
@@ -59,7 +59,7 @@ namespace sentinel_api.Application.Services
             _context.EmailConfirmTokens.Remove(tokenEntry);
             await _context.SaveChangesAsync();
 
-            return Result.Success("E-mail confirmado com sucesso!");
+            return Result.Ok("E-mail confirmado com sucesso!");
 
         }
 
@@ -72,7 +72,7 @@ namespace sentinel_api.Application.Services
 
             await _emailService.EmailPasswordResetAsync(user);
 
-            return Result.Success("E-mail de recuperar senha enviado com sucesso! Confira sua caixa de entrada.");
+            return Result.Ok("E-mail de recuperar senha enviado com sucesso! Confira sua caixa de entrada.");
 
         }
 
@@ -85,7 +85,7 @@ namespace sentinel_api.Application.Services
 
             var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
 
-            return Result.Success("Senha redefinida com sucesso! Você pode fazer login agora.");
+            return Result.Ok("Senha redefinida com sucesso! Você pode fazer login agora.");
         }
 
         public async Task<Result> LoginAsync(LoginDto dto)
@@ -100,7 +100,7 @@ namespace sentinel_api.Application.Services
 
             var token = _jwtService.GenerateJwtToken(user);
 
-            return Result<string>.Success(token, "pega o token ai");
+            return Result<string>.Ok(token, "pega o token ai");
         }
 
     }
